@@ -2,7 +2,7 @@ import subprocess
 import psutil
 
 autohotkey_executable = r'C:\Program Files\AutoHotkey\AutoHotkey.exe'
-ahk_script_path = r'./windowSwitcher.ahk'
+ahk_script_path = r'./src/windowSwitcher.ahk'
 version_file_path = r"C:\Users\Paul Le Bras\AppData\Local\Ankama\Dofus\VERSION"
 ankama_launcher_exe = "Ankama Launcher.exe"
 ankama_launcher_path = rf"C:\Program Files\Ankama\Ankama Launcher\{ankama_launcher_exe}"
