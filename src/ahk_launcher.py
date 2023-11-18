@@ -1,6 +1,9 @@
 import subprocess
 import psutil
 import os
+import sys
+
+os.chdir(sys._MEIPASS)
 
 autohotkey_executable = r'C:\Program Files\AutoHotkey\AutoHotkey.exe'
 ahk_script_path = os.path.join('.', 'src', 'windowSwitcher.ahk')
@@ -10,6 +13,7 @@ ankama_launcher_path = os.path.join('C:\\', 'Program Files', 'Ankama', 'Ankama L
 
 # Ensure the backslashes are correctly handled on Windows
 ankama_launcher_path = os.path.normpath(ankama_launcher_path)
+
 
 def get_dofus_version():
     try:
