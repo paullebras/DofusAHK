@@ -1,18 +1,21 @@
 import subprocess
 import psutil
+import os
 
 autohotkey_executable = r'C:\Program Files\AutoHotkey\AutoHotkey.exe'
-ahk_script_path = r'./src/windowSwitcher.ahk'
-version_file_path = r"C:\Users\Paul Le Bras\AppData\Local\Ankama\Dofus\VERSION"
+ahk_script_path = os.path.join('.', 'src', 'windowSwitcher.ahk')
+version_file_path = os.path.join(os.path.expanduser('~'), 'AppData', 'Local', 'Ankama', 'Dofus', 'VERSION')
 ankama_launcher_exe = "Ankama Launcher.exe"
-ankama_launcher_path = rf"C:\Program Files\Ankama\Ankama Launcher\{ankama_launcher_exe}"
+ankama_launcher_path = os.path.join('C:\\', 'Program Files', 'Ankama', 'Ankama Launcher', ankama_launcher_exe)
 
+# Ensure the backslashes are correctly handled on Windows
+ankama_launcher_path = os.path.normpath(ankama_launcher_path)
 
 def get_dofus_version():
     try:
         with open(version_file_path, 'r') as file:
-            version = file.read()
-            return version.strip()
+            version = file.read().strip()
+            return version
     except FileNotFoundError:
         print(f"The file '{version_file_path}' does not exist.")
     except Exception as e:
