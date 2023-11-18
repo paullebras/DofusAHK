@@ -5,12 +5,14 @@ SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
 
 isScriptEnabled := 1
 
-file := FileOpen("C:\Users\Paul Le Bras\AppData\Local\Ankama\Dofus", "r")
-dofusVersion := ""
-FileRead, dofusVersion, %file%
-file.Close()
+if (A_Args.Count() > 0) {
+    dofusVersion := A_Args[1]
+} else {
+    MsgBox, No command line argument provided. Exiting script.
+    ExitApp
+}
 
-ActivateWindow(winTitle, isScriptEnabled, dofusVersion)
+ActivateWindow(winTitle, isScriptEnabled)
 {
     If isScriptEnabled
     {
@@ -23,15 +25,14 @@ F12::
 return
 
 F1::
-    ActivateWindow("Baabu", isScriptEnabled, dofusVersion)
+    ActivateWindow("Baabu", isScriptEnabled)
 return
 F2::
-    ActivateWindow("Sanguor", isScriptEnabled, dofusVersion)
+    ActivateWindow("Sanguor", isScriptEnabled)
 return
 F3::
-    ActivateWindow("Takamori", isScriptEnabled, dofusVersion)
+    ActivateWindow("Takamori", isScriptEnabled)
 return
 F4::
-    ActivateWindow("Melina-[Jul]", isScriptEnabled, dofusVersion)
+    ActivateWindow("Melina-[Jul]", isScriptEnabled)
 return
-
