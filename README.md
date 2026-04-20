@@ -7,15 +7,17 @@ Python and AutoHotkey scripts for Dofus
 The Windows script uses Python and AutoHotkey to manage Dofus windows.
 
 ### Usage
+Run the following commands from the `windows/` directory.
+
 1. **Install Requirements**:
    ```
-   python -m pip freeze > requirements.txt
-   python -m pip install > requirements.txt
+   python -m pip install -r requirements.txt
    ```
 2. **Build the Executable**:
    ```
    pyinstaller --clean --onefile --name Dofus --add-data src/windowSwitcher.ahk:src --icon .\src\assets\logo.png src/ahk_launcher.py
    ```
+   The output `Dofus.exe` will be in `windows/dist/`.
 
 ## Linux Script
 
