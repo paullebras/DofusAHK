@@ -1,0 +1,14 @@
+[project]
+name = "dofusahk"
+version = "0.1.0"
+description = "Python launcher for Dofus + AutoHotkey on Windows"
+requires-python = ">=3.14"
+dependencies = [
+    "psutil>=7.2.2",
+]
+
+[dependency-groups]
+dev = [
+    "pillow>=12.2.0",
+    "pyinstaller>=6.19.0",
+]
