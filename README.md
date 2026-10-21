@@ -4,7 +4,19 @@ Python and AutoHotkey scripts for Dofus
 ## Windows Script
 
 ### Description
-The Windows script uses Python and AutoHotkey to manage Dofus windows.
+The Windows script uses Python and **AutoHotkey v2** to manage Dofus windows.
+Install AutoHotkey v2 from https://www.autohotkey.com/ (v1 alone is not supported).
+The launcher detects the v2 interpreter in the standard system or per-user installation.
+For a portable/custom installation, set `$env:AUTOHOTKEY_EXE` to the full path of its v2 interpreter.
+
+F1: Baabu; F2: Sanguor; F3: Takamori; F4: Ninomae-inanis.
+Edit these names in `windows/src/windowSwitcher.ahk` to match your characters.
+F12 toggles window switching. Missing windows are ignored. Titles are matched by substring,
+without reading Dofus's `VERSION` file. The shortcuts start even when Ankama Launcher is already running.
+The switcher disables AHK's default 100 ms post-activation delay (`SetWinDelay(-1)`)
+and uses `#WinActivateForce` to reduce taskbar flashing during rapid switches.
+It does not intercept or replay mouse clicks: Windows still routes physical clicks
+according to the window active when each click is processed.
 
 ### Usage
 Run the following commands from the `windows/` directory.
@@ -13,11 +25,30 @@ Run the following commands from the `windows/` directory.
    ```
    uv sync --dev
    ```
-2. **Build the Executable**:
+2. **Run from source** (no build needed):
+   ```powershell
+   uv run python src/ahk_launcher.py
+   ```
+   The script path is resolved independently of the current working directory.
+   A missing interpreter or an invalid AHK script is reported before applications are launched.
+
+3. **Build the Executable**:
    ```
    uv run pyinstaller --clean --onefile --name Dofus --add-data src/windowSwitcher.ahk:src --icon .\src\assets\logo.png src/ahk_launcher.py
    ```
-   The output `Dofus.exe` will be in `windows/dist/`.
+   The output `Dofus.exe` will be in `windows/dist/`. AutoHotkey v2 must also be installed
+   on the machine running the executable; it is not bundled. Keep the launcher console open
+   while using the shortcuts: it keeps the extracted AHK script available. Ctrl+C stops the shortcuts;
+   you can also exit AutoHotkey from its tray icon. If Ankama Launcher is not installed at the default
+   location, open it manually; the shortcuts remain available.
+
+4. **Verify changes**:
+   ```powershell
+   uv run python -m unittest discover -s tests -v
+   $validation = Start-Process -FilePath "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" -ArgumentList '/ErrorStdOut', '/validate', "`"$((Resolve-Path .\src\windowSwitcher.ahk).Path)`"" -Wait -PassThru
+   $validation.ExitCode # 0 means successful validation
+   ```
+   Tests simulate application launches; AHK validation loads the script without registering its shortcuts.
 
 ## Linux Script
 

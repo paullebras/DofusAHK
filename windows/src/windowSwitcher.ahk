@@ -1,38 +1,36 @@
-#NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
-; #Warn  ; Enable warnings to assist with detecting common errors.
-SendMode Input ; Recommended for new scripts due to its superior speed and reliability.
-SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+#WinActivateForce
+#Warn
+SendMode("Input")
+SetWorkingDir(A_ScriptDir)
+SetTitleMatchMode(2)
+; Do not keep a switching hotkey busy for AHK's default 100 ms after activation.
+SetWinDelay(-1)
 
-isScriptEnabled := 1
+isScriptEnabled := true
 
-if (A_Args.Count() > 0) {
-    dofusVersion := A_Args[1]
-} else {
-    MsgBox, No command line argument provided. Exiting script.
-    ExitApp
-}
-
-ActivateWindow(winTitle, isScriptEnabled)
-{
-    If isScriptEnabled
-    {
-        WinActivate, %winTitle% - %dofusVersion%
+ActivateWindow(winTitle) {
+    global isScriptEnabled
+    if !isScriptEnabled
+        return
+    hwnd := WinExist(winTitle)
+    if hwnd {
+        try {
+            WinActivate(hwnd)
+        } catch TargetError {
+            ; The window may have closed after WinExist.
+            return
+        }
     }
 }
 
-F12::
+F12:: {
+    global isScriptEnabled
     isScriptEnabled := !isScriptEnabled
-return
+}
 
-F1::
-    ActivateWindow("Baabu", isScriptEnabled)
-return
-F2::
-    ActivateWindow("Sanguor", isScriptEnabled)
-return
-F3::
-    ActivateWindow("Takamori", isScriptEnabled)
-return
-F4::
-    ActivateWindow("Melina-[Jul]", isScriptEnabled)
-return
+F1:: ActivateWindow("Baabu")
+F2:: ActivateWindow("Sanguor")
+F3:: ActivateWindow("Takamori")
+F4:: ActivateWindow("Ninomae-inanis")
