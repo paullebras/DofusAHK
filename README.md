@@ -15,6 +15,8 @@ F12 toggles window switching. Missing windows are ignored. Titles are matched by
 without reading Dofus's `VERSION` file. The shortcuts start even when Ankama Launcher is already running.
 The switcher disables AHK's default 100 ms post-activation delay (`SetWinDelay(-1)`)
 and uses `#WinActivateForce` to reduce taskbar flashing during rapid switches.
+It caches window handles (rechecking their titles to avoid stale handles) and requests foreground focus
+with Windows `SetForegroundWindow`; minimized windows or refused requests use AHK's `WinActivate` fallback.
 It does not intercept or replay mouse clicks: Windows still routes physical clicks
 according to the window active when each click is processed.
 
@@ -49,6 +51,12 @@ Run the following commands from the `windows/` directory.
    $validation.ExitCode # 0 means successful validation
    ```
    Tests simulate application launches; AHK validation loads the script without registering its shortcuts.
+
+   For a focus timing check, close the switcher, then run `powershell -File .\tests\benchmark-switching.ps1`.
+   This opens four temporary windows, compares native activation with `WinActivate`, and checks missing/closed
+   windows, disabled switching and restore. It reports request and observed focus timings separately.
+   It sends no mouse clicks. These synthetic windows cannot establish Dofus render/input latency;
+   verify rapid F1-click-F2-click-F3-click-F4-click sequences in game as well.
 
 ## Linux Script
 
