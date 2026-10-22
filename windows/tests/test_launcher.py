@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 import importlib.util
 import io
 from pathlib import Path
@@ -13,6 +14,11 @@ spec.loader.exec_module(launcher)
 
 
 class LauncherTests(unittest.TestCase):
+    def setUp(self):
+        gate = patch.object(launcher, 'single_instance', return_value=nullcontext((True, lambda: False)))
+        gate.start()
+        self.addCleanup(gate.stop)
+
     def test_source_and_bundled_resource_paths(self):
         with patch.object(sys, 'frozen', False, create=True):
             self.assertEqual(launcher.get_script_path(), SOURCE.with_name('windowSwitcher.ahk'))
@@ -46,9 +52,13 @@ class LauncherTests(unittest.TestCase):
             with self.subTest(running=running), patch.object(launcher, 'find_autohotkey', return_value=Path('v2.exe')), patch.object(launcher, 'is_process_running', return_value=running), patch.object(launcher.subprocess, 'run', return_value=Mock(returncode=0)), patch.object(launcher.subprocess, 'Popen') as popen:
                 popen.return_value.wait.return_value = 0
                 self.assertEqual(launcher.main(), 0)
-                self.assertEqual(popen.call_count, 1 if running else 2)
+                self.assertEqual(popen.call_count, 2)
                 self.assertEqual(len(popen.call_args_list[0].args[0]), 2)
                 popen.return_value.wait.assert_called_once()
+                for call in popen.call_args_list:
+                    for stream in ('stdin', 'stdout', 'stderr'):
+                        self.assertEqual(call.kwargs[stream], launcher.subprocess.DEVNULL)
+                    self.assertEqual(call.kwargs['creationflags'], launcher.subprocess.CREATE_NO_WINDOW)
 
     def test_validation_failure_starts_no_applications(self):
         with patch.object(launcher, 'find_autohotkey', return_value=Path('v2.exe')), patch.object(launcher.subprocess, 'run', return_value=Mock(returncode=2, stdout='invalid script')), patch.object(launcher.subprocess, 'Popen') as popen, patch('sys.stderr', new_callable=io.StringIO) as stderr:
@@ -68,6 +78,19 @@ class LauncherTests(unittest.TestCase):
         with patch.object(launcher, 'find_autohotkey', return_value=Path('v2.exe')), patch.object(launcher, 'is_process_running', return_value=False), patch.object(launcher.subprocess, 'run', return_value=Mock(returncode=0)), patch.object(launcher.subprocess, 'Popen', side_effect=[ahk, FileNotFoundError('missing')]), patch('sys.stderr', new_callable=io.StringIO):
             self.assertEqual(launcher.main(), 0)
             ahk.wait.assert_called_once()
+
+    def test_windowed_startup_without_standard_streams(self):
+        with patch.object(sys, 'stdin', None), patch.object(sys, 'stdout', None), patch.object(sys, 'stderr', None), patch.object(launcher, 'find_autohotkey', return_value=Path('v2.exe')), patch.object(launcher, 'is_process_running', return_value=True), patch.object(launcher.subprocess, 'run', return_value=Mock(returncode=0)) as run, patch.object(launcher.subprocess, 'Popen') as popen:
+            popen.return_value.wait.return_value = 0
+            self.assertEqual(launcher.main(), 0)
+            self.assertEqual(run.call_args.kwargs['stdin'], launcher.subprocess.DEVNULL)
+            self.assertEqual(run.call_args.kwargs['creationflags'], launcher.subprocess.CREATE_NO_WINDOW)
+
+    def test_windowed_startup_failure_shows_dialog(self):
+        with patch.object(sys, 'stderr', None), patch.object(launcher, 'find_autohotkey', side_effect=FileNotFoundError('v2 missing')), patch.object(launcher.ctypes.windll.user32, 'MessageBoxW') as dialog:
+            self.assertEqual(launcher.main(), 1)
+            dialog.assert_called_once()
+            self.assertIn('v2 missing', dialog.call_args.args[1])
 
     def test_ignores_processes_without_a_name(self):
         processes = [Mock(info={'name': None}), Mock(info={'name': 'ANKAMA LAUNCHER.EXE'})]

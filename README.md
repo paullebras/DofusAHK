@@ -36,12 +36,14 @@ Run the following commands from the `windows/` directory.
 
 3. **Build the Executable**:
    ```
-   uv run pyinstaller --clean --onefile --name Dofus --add-data src/windowSwitcher.ahk:src --icon .\src\assets\logo.png src/ahk_launcher.py
+   uv run pyinstaller --clean --onefile --windowed --name Dofus --add-data src/windowSwitcher.ahk:src --icon .\src\assets\logo.png src/ahk_launcher.py
    ```
    The output `Dofus.exe` will be in `windows/dist/`. AutoHotkey v2 must also be installed
-   on the machine running the executable; it is not bundled. Keep the launcher console open
-   while using the shortcuts: it keeps the extracted AHK script available. Ctrl+C stops the shortcuts;
-   you can also exit AutoHotkey from its tray icon. If Ankama Launcher is not installed at the default
+   on the machine running the executable; it is not bundled. The executable runs in the background
+   without a terminal window and keeps the extracted AHK script available. Exit AutoHotkey from its
+   tray icon to stop the shortcuts and their background launcher. Startup failures appear in a dialog;
+   application output is not forwarded to a console. Running the Python source keeps terminal errors
+   available for debugging. If Ankama Launcher is not installed at the default
    location, open it manually; the shortcuts remain available.
 
 4. **Verify changes**:
@@ -57,6 +59,26 @@ Run the following commands from the `windows/` directory.
    windows, disabled switching and restore. It reports request and observed focus timings separately.
    It sends no mouse clicks. These synthetic windows cannot establish Dofus render/input latency;
    verify rapid F1-click-F2-click-F3-click-F4-click sequences in game as well.
+
+### Background lifecycle
+
+Only one shortcut session runs per Windows session, including repeated launches from different
+PyInstaller extraction folders. Clicking the executable again reuses the current shortcut session. Each click invokes Ankama Launcher;
+its own single-instance mechanism opens/restores the existing main window, including from the system tray. A relaunch also resets the session's shutdown grace period.
+
+The background helper checks client processes every 2 seconds, outside the AHK hotkey handlers.
+Before the first client, it waits while Ankama Launcher is running. After a client has been detected,
+closing the last client stops AutoHotkey and the helper after approximately 15-19 seconds, even if
+Ankama Launcher stays open. Reopening a client during this grace period cancels shutdown.
+If no client was ever started, quitting Ankama Launcher also starts the grace period.
+Use the AutoHotkey tray icon to exit immediately.
+
+Detection covers this installation's Dofus Unity/beta (`Dofus.exe` with a sibling `Dofus_Data` directory)
+and Dofus Retro (`Dofus Retro.exe`). The helper itself is also named `Dofus.exe` and is excluded.
+If a matching client's executable cannot be read, the helper conservatively stays running.
+
+The one-file executable normally has two `Dofus.exe` processes (bootstrap and Python worker), plus
+its AutoHotkey child. These are one logical shortcut session, not duplicate sessions, and exit together.
 
 ## Linux Script
 
